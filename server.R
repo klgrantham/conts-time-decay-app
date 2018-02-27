@@ -81,7 +81,7 @@ shinyServer(function(input, output) {
   output$plot2 <- renderPlotly({
     res <- getresults()
     relres <- res %>% 
-      mutate(ratioSW=ctSW/HHSW, ratiocrxo=ctcrxo/HHcrxo, ratiopllel=ctpllel/HHpllel) %>%
+      mutate(ratioSW=HHSW/ctSW, ratiocrxo=HHcrxo/ctcrxo, ratiopllel=HHpllel/ctpllel) %>%
       select(decay, starts_with('ratio'))
     p <- plot_ly(relres, x=~decay, y=~ratiopllel, name="Parallel", type="scatter",
                  mode="lines", hoverinfo="text", hoverlabel=list(bordercolor=NULL, font=list(size=16)),
@@ -108,7 +108,7 @@ shinyServer(function(input, output) {
   output$plot3 <- renderPlotly({
     res <- getresults()
     relres <- res %>% 
-      mutate(ratioSW=ctSW/dtSW, ratiocrxo=ctcrxo/dtcrxo, ratiopllel=ctpllel/dtpllel) %>%
+      mutate(ratioSW=dtSW/ctSW, ratiocrxo=dtcrxo/ctcrxo, ratiopllel=dtpllel/ctpllel) %>%
       select(decay, starts_with('ratio'))
     p <- plot_ly(relres, x=~decay, y=~ratiopllel, name="Parallel", type="scatter",
                  mode="lines", hoverinfo="text", hoverlabel=list(bordercolor=NULL, font=list(size=16)),
