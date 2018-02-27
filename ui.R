@@ -40,9 +40,6 @@ shinyUI(fluidPage(
     # Main panel for displaying output
     mainPanel(
       
-      # Output: Table summarizing the values entered
-      tableOutput("values"),
-      
       # Output: Plotly plot of variance under CT model
       plotlyOutput("plot1"),
       

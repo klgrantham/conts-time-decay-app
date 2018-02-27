@@ -10,20 +10,6 @@ source('conts_time_decay.R')
 
 shinyServer(function(input, output) {
   
-  # Reactive expression to create data frame of all input values
-  sliderValues <- eventReactive(input$update, {
-    
-    data.frame(
-      Name = c("Number of periods",
-               "Number of subjects",
-               "Base correlation"),
-      Value = as.character(c(input$nperiods,
-                             input$nsubjects,
-                             input$rho0)),
-      stringsAsFactors = FALSE
-    )
-  })
-  
   getresults <- eventReactive(input$update, {
     
     # Create a Progress object
@@ -47,12 +33,6 @@ shinyServer(function(input, output) {
     
     res <- generate_var_results_prog(input$nperiods, input$nsubjects, input$rho0, updateProgress)
     return(res)
-  })
-  
-  
-  # Show the values in an HTML table
-  output$values <- renderTable({
-    sliderValues()
   })
   
   output$plot1 <- renderPlotly({
