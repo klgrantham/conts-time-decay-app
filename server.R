@@ -35,9 +35,25 @@ shinyServer(function(input, output) {
     return(res)
   })
   
+  output$plotheader1a <- eventReactive(input$update, {
+    header1a()
+  })
+  
+  output$plotheader1b <- eventReactive(input$update, {
+    header1b()
+  })
+  
+  header1a <- renderPrint({
+    tags$h3("Variance of treatment effect estimator")
+  })
+  
+  header1b <- renderPrint({
+    tags$h4("Continuous-time decaying correlation")
+  })
+  
   output$plot1 <- renderPlotly({
     res <- getresults()
-    p <- plot_ly(res, height=400, x=~decay, y=~ctpllel, name="Parallel", type="scatter",
+    p <- plot_ly(res, height=400, width=650, x=~decay, y=~ctpllel, name="Parallel", type="scatter",
                  mode="lines", hoverinfo="text", hoverlabel=list(bordercolor=NULL, font=list(size=16)),
                  text=~paste("Decay: ", round(decay, 2), "<br> Variance: ", round(ctpllel, 3)),
                  line=list(color="#00BA38", width=4, dash="dashdot")) %>%
@@ -58,12 +74,28 @@ shinyServer(function(input, output) {
     p
   })
   
+  output$plotheader2a <- eventReactive(input$update, {
+    header2a()
+  })
+  
+  output$plotheader2b <- eventReactive(input$update, {
+    header2b()
+  })
+  
+  header2a <- renderPrint({
+    tags$h3("Relative variance of treatment effect estimator")
+  })
+  
+  header2b <- renderPrint({
+    tags$h4("Uniform vs Continuous-time decaying correlation")
+  })
+  
   output$plot2 <- renderPlotly({
     res <- getresults()
     relres <- res %>% 
       mutate(ratioSW=HHSW/ctSW, ratiocrxo=HHcrxo/ctcrxo, ratiopllel=HHpllel/ctpllel) %>%
       select(decay, starts_with('ratio'))
-    p <- plot_ly(relres, x=~decay, y=~ratiopllel, name="Parallel", type="scatter",
+    p <- plot_ly(relres, height=400, width=650, x=~decay, y=~ratiopllel, name="Parallel", type="scatter",
                  mode="lines", hoverinfo="text", hoverlabel=list(bordercolor=NULL, font=list(size=16)),
                  text=~paste("Decay: ", round(decay, 2), "<br> Relati ve variance: ", round(ratiopllel, 3)),
                  line=list(color="#00BA38", width=4, dash="dashdot")) %>%
@@ -85,12 +117,28 @@ shinyServer(function(input, output) {
     p
   })
   
+  output$plotheader3a <- eventReactive(input$update, {
+    header3a()
+  })
+  
+  output$plotheader3b <- eventReactive(input$update, {
+    header3b()
+  })
+  
+  header3a <- renderPrint({
+    tags$h3("Relative variance of treatment effect estimator")
+  })
+  
+  header3b <- renderPrint({
+    tags$h4("Discrete-time vs Continuous-time decaying correlation")
+  })
+  
   output$plot3 <- renderPlotly({
     res <- getresults()
     relres <- res %>% 
       mutate(ratioSW=dtSW/ctSW, ratiocrxo=dtcrxo/ctcrxo, ratiopllel=dtpllel/ctpllel) %>%
       select(decay, starts_with('ratio'))
-    p <- plot_ly(relres, x=~decay, y=~ratiopllel, name="Parallel", type="scatter",
+    p <- plot_ly(relres, height=400, width=650, x=~decay, y=~ratiopllel, name="Parallel", type="scatter",
                  mode="lines", hoverinfo="text", hoverlabel=list(bordercolor=NULL, font=list(size=16)),
                  text=~paste("Decay: ", round(decay, 2), "<br> Relative variance: ", round(ratiopllel, 3)),
                  line=list(color="#00BA38", width=4, dash="dashdot")) %>%

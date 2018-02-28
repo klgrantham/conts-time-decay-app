@@ -41,12 +41,27 @@ shinyUI(fluidPage(
     mainPanel(
       
       # Output: Plotly plot of variance under CT model
+      
+      uiOutput("plotheader1a"),
+      
+      uiOutput("plotheader1b"),
+      
       plotlyOutput("plot1"),
       
-      # Output: Plotly plot of relative variance, CT vs HH models
+      # Output: Plotly plot of relative variance, HH vs CT vs models
+
+      uiOutput("plotheader2a"),
+      
+      uiOutput("plotheader2b"),
+
       plotlyOutput("plot2"),
       
-      # Output: Plotly plot of relative variance, CT vs DT models
+      # Output: Plotly plot of relative variance, DT vs CT models
+
+      uiOutput("plotheader3a"),
+      
+      uiOutput("plotheader3b"),
+
       plotlyOutput("plot3")
     )
   )
