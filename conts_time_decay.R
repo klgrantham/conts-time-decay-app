@@ -24,50 +24,39 @@ vartheta_mean <- function(Vi, Xmat){
   K <- nrow(Xmat)
   Tp <- ncol(Xmat)
   Xvec <- as.vector(t(Xmat))
-  var <- 1/(t(Xvec) %*% (diag(1,K) %x% solve(Vi)) %*% Xvec - 
-              colSums(Xmat) %*% solve(Vi) %*% (matrix(colSums(Xmat),nrow=Tp, ncol=1))/K)
+  Vi_inv <- solve(Vi)
+  var <- 1/(t(Xvec) %*% (diag(1,K) %x% Vi_inv) %*% Xvec - 
+              colSums(Xmat) %*% Vi_inv %*% (matrix(colSums(Xmat),nrow=Tp, ncol=1))/K)
   return(var)
 }
 
-vartheta_ind <- function(Vi, Xmat, Toeplitz=TRUE){
+vartheta_ind_vec <- function(Vi, Xmat, Toeplitz=TRUE){
   # Calculates the variance of the treatment effect, theta, for a model at the
   # individual level with a particular treatment schedule
   #
   # Inputs:
-  # Xmat - a K x T matrix of the treatment schedule (note: all elements either 0 or 1)
+  # Xmat - a vector of K x T matrices of the treatment schedule (note: all elements either 0 or 1)
   # Vi - a Tm x Tm variance matrix for one cluster
   
-  K <- nrow(Xmat)
-  Tp <- ncol(Xmat)
-  m <- nrow(Vi)/Tp
   # If continuous time matrix, use Toeplitz inversion algorithm
   if(Toeplitz){ # Could check for Vi[1,2]!=Vi[1,3] but w/ simulated times won't be Toeplitz
     Vi_inv <- TrenchInverse(Vi)
   } else{
     Vi_inv <- solve(Vi)
   }
-  Q <- Xmat %x% t(rep(1,m))
-  B <- colSums(Xmat) %x% rep(1,m)
-  C <- diag(Tp) %x% rep(1,m)
-  term1 <- sum(diag(Q %*% Vi_inv %*% t(Q))) # Previously: t(D) %*% (diag(1,K) %x% Vi_inv) %*% D, where D <- Xvec %x% rep(1,m)
-  term2 <- t(B) %*% Vi_inv %*% C
-  term3 <- solve(t(C) %*% Vi_inv %*% C)
-  term4 <- t(C) %*% Vi_inv %*% B
-  var <- 1/(term1 - (1/K)*term2 %*% term3 %*% term4)
-  return(var)
+  
+  vars <- laply(Xmat, vartheta, Vi_inv)
+  return(vars)
 }
 
-vartheta_ind_inv <- function(Vi_inv, Xmat, Toeplitz=TRUE){
-  # Calculates the variance of the treatment effect, theta, for a model at the
-  # individual level with a particular treatment schedule
-  #
-  # Inputs:
-  # Vi_inv - a Tm x Tm inverse covariance matrix for one cluster
-  # Xmat - a K x T matrix of the treatment schedule (note: all elements either 0 or 1)
+vartheta <- function(Xmat, Vi_inv) {
+  # Returns variance of treatment effect estimator for an inverse covariance
+  # matrix and a design matrix
   
   K <- nrow(Xmat)
   Tp <- ncol(Xmat)
   m <- nrow(Vi_inv)/Tp
+  
   Q <- Xmat %x% t(rep(1,m))
   B <- colSums(Xmat) %x% rep(1,m)
   C <- diag(Tp) %x% rep(1,m)
@@ -218,101 +207,49 @@ pllelbasedesmat <- function(Tp){
   return(Xpllelbase)
 }
 
-# Generate variance results for user-defined trial configuration
-
-generate_var_results <- function(Tp, m, rho0){
-  # Calculates the variance of the treatment effect under the models:
+# Generate variance results for user-defined trial configuration, with progress bar
+generate_var_results_prog <- function(Tp, m, rho0, updateProgress = NULL) {
+  # Calculates the variance of the treatment effect estimator under the models:
   #    continuous time (ct), discrete time (dt), Hussey & Hughes (HH)
   # with trial designs:
-  #    stepped wedge (SW), cluster randomised crossover (CRXO),
-  #    parallel (pllel), parallel with baseline (pllelbase)
+  #    stepped wedge (SW),
+  #    cluster randomised crossover (CRXO),
+  #    parallel (pllel)
   #
   # Inputs:
   # Tp - number of time periods in the trial
   # m - number of subjects measured in each time period
   # rho0 - base correlation between a pair of subjects
   #
-  # Example usage: vals <- comparison_plots(Tp=4, m=50, rho0=0.035)
+  # Example usage: vals <- generate_var_results(Tp=4, m=50, rho0=0.035)
   
-  rs <- seq(0.5, 1, 0.01) # Note: May need to expand range from 0 to 1?
-  # Specify the variance matrices under the different models
-  ctvarmat <- llply(rs, expdecayVicont, Tp, m, rho0, meanlvl=FALSE)
-  dtvarmat <- llply(rs, expdecayVi, Tp, m, rho0, meanlvl=TRUE)
-  HHvarmat <- HHVi(Tp, m, rho0, meanlvl=TRUE)
-  
-  # Get the variances of the treatment effect under the
-  # different models and designs
-  # Note: Still need to expand the Xmats according to nclust?
-  # Scale the non-SW variances by (Tp/(Tp-1)) to account for uneven clusters across designs
-  scalefactor <- Tp/(Tp-1)
-  varvals <- data.frame(decay = 1-rs,
-                        ctSW = laply(ctvarmat, vartheta_ind, Xmat=SWdesmat(Tp)),
-                        ctcrxo = scalefactor*laply(ctvarmat, vartheta_ind, Xmat=crxodesmat(Tp)),
-                        ctpllel = scalefactor*laply(ctvarmat, vartheta_ind, Xmat=plleldesmat(Tp)),
-                        ctpllelbase = scalefactor*laply(ctvarmat, vartheta_ind, Xmat=pllelbasedesmat(Tp)),
-                        dtSW = laply(dtvarmat, vartheta_mean, Xmat=SWdesmat(Tp)),
-                        dtcrxo = scalefactor*laply(dtvarmat, vartheta_mean, Xmat=crxodesmat(Tp)),
-                        dtpllel = scalefactor*laply(dtvarmat, vartheta_mean, Xmat=plleldesmat(Tp)),
-                        dtpllelbase = scalefactor*laply(dtvarmat, vartheta_mean, Xmat=pllelbasedesmat(Tp)),
-                        HHSW = vartheta_mean(Vi=HHvarmat, Xmat=SWdesmat(Tp)),
-                        HHcrxo = scalefactor*vartheta_mean(Vi=HHvarmat, Xmat=crxodesmat(Tp)),
-                        HHpllel = scalefactor*vartheta_mean(Vi=HHvarmat, Xmat=plleldesmat(Tp)),
-                        HHpllelbase = scalefactor*vartheta_mean(Vi=HHvarmat, Xmat=pllelbasedesmat(Tp)))
-  return(varvals)
-}
-
-generate_var_results_prog <- function(Tp, m, rho0, updateProgress = NULL){
-  # Calculates the variance of the treatment effect under the models:
-  #    continuous time (ct), discrete time (dt), Hussey & Hughes (HH)
-  # with trial designs:
-  #    stepped wedge (SW), cluster randomised crossover (CRXO),
-  #    parallel (pllel), parallel with baseline (pllelbase)
-  #
-  # Inputs:
-  # Tp - number of time periods in the trial
-  # m - number of subjects measured in each time period
-  # rho0 - base correlation between a pair of subjects
-  #
-  # Example usage: vals <- comparison_plots(Tp=4, m=50, rho0=0.035)
-  
-  rs <- seq(0.5, 1, 0.01) # Note: May need to expand range from 0 to 1?
-  # Specify the variance matrices under the different models
+  # Set vector of r values (Decay = 1-r)
+  rs <- seq(0.5, 1, 0.01)
+  # Specify the covariance matrices under the different models
   if (is.function(updateProgress)) {
     updateProgress()
   }
   ctvarmat <- llply(rs, expdecayVicont, Tp, m, rho0, meanlvl=FALSE)
-  
   if (is.function(updateProgress)) {
     updateProgress()
   }
   dtvarmat <- llply(rs, expdecayVi, Tp, m, rho0, meanlvl=TRUE)
-  
   if (is.function(updateProgress)) {
     updateProgress()
   }
   HHvarmat <- HHVi(Tp, m, rho0, meanlvl=TRUE)
   
-  # Get the variances of the treatment effect under the
+  # Get the variances of the treatment effect estimator under the
   # different models and designs
-  # Note: Still need to expand the Xmats according to nclust?
-  # Scale the non-SW variances by (Tp/(Tp-1)) to account for uneven clusters across designs
   scalefactor <- Tp/(Tp-1)
-  
-  # Split up computations and include checks for updateProgress()
+  Xmats <- list(SWdesmat(Tp), crxodesmat(Tp), plleldesmat(Tp))
   if (is.function(updateProgress)) {
     updateProgress()
   }
-  ctSW <- laply(ctvarmat, vartheta_ind, Xmat=SWdesmat(Tp))
-  
-  if (is.function(updateProgress)) {
-    updateProgress()
-  }
-  ctcrxo <- scalefactor*laply(ctvarmat, vartheta_ind, Xmat=crxodesmat(Tp))
-
-  if (is.function(updateProgress)) {
-    updateProgress()
-  }
-  ctpllel <- scalefactor*laply(ctvarmat, vartheta_ind, Xmat=plleldesmat(Tp))
+  ctres <- laply(ctvarmat, vartheta_ind_vec, Xmat=Xmats)
+  ctSW <- ctres[,1]
+  ctcrxo <- scalefactor*ctres[,2]
+  ctpllel <- scalefactor*ctres[,3]
   
   if (is.function(updateProgress)) {
     updateProgress()
@@ -328,12 +265,12 @@ generate_var_results_prog <- function(Tp, m, rho0, updateProgress = NULL){
   HHcrxo <- scalefactor*vartheta_mean(Vi=HHvarmat, Xmat=crxodesmat(Tp))
   HHpllel <- scalefactor*vartheta_mean(Vi=HHvarmat, Xmat=plleldesmat(Tp))
   
-  varvals <- data.frame(decay = 1-rs, ctSW = ctSW, ctcrxo = ctcrxo, ctpllel = ctpllel,
+  varvals <- data.frame(decay=1-rs,
+                        ctSW = ctSW, ctcrxo = ctcrxo, ctpllel = ctpllel,
                         dtSW = dtSW, dtcrxo = dtcrxo, dtpllel = dtpllel,
                         HHSW = HHSW, HHcrxo = HHcrxo, HHpllel = HHpllel)
   return(varvals)
 }
-
 
 compare_designs <- function(df.long, ylabel){
   names(df.long)[dim(df.long)[2]] <- "value" # Assumes last column to be plotted
