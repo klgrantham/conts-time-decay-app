@@ -24,7 +24,7 @@ shinyUI(fluidPage(
       
       # Input: Interval, number of subjects per cluster-period
       sliderInput("nsubjects", "Number of subjects per cluster-period:",
-                  min = 10, max = 200, # Raise max later once working
+                  min = 10, max = 500, # Raise max later once working
                   value = 50, step = 10),
       
       # Input: Interval, base correlation rho0
