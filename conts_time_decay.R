@@ -30,21 +30,16 @@ vartheta_mean <- function(Vi, Xmat){
   return(var)
 }
 
-vartheta_ind_vec <- function(Vi, Xmat, Toeplitz=TRUE){
+vartheta_ind_vec <- function(Virow1, Xmat){
   # Calculates the variance of the treatment effect, theta, for a model at the
   # individual level with a particular treatment schedule
   #
   # Inputs:
   # Xmat - a vector of K x T matrices of the treatment schedule (note: all elements either 0 or 1)
-  # Vi - a Tm x Tm variance matrix for one cluster
+  # Virow1 - first row of length Tm of the covariance matrix for one cluster
   
-  # If continuous time matrix, use Toeplitz inversion algorithm
-  if(Toeplitz){ # Could check for Vi[1,2]!=Vi[1,3] but w/ simulated times won't be Toeplitz
-    Vi_inv <- TrenchInverse(Vi)
-  } else{
-    Vi_inv <- solve(Vi)
-  }
-  
+  Vi <- toeplitz(Virow1)
+  Vi_inv <- TrenchInverse(Vi)
   vars <- laply(Xmat, vartheta, Vi_inv)
   return(vars)
 }
@@ -125,41 +120,21 @@ expdecayVi <- function(r, Tp, m, rho0, meanlvl=TRUE){
   return(Vi)
 }
 
-expdecayVicont <- function(r, Tp, m, rho0, meanlvl=FALSE){
-  # Constructs the variance matrix for a single cluster, Vi, under the
-  # exponential decay model in continuous itme, at either the cluster-
-  # period mean level or at the individual level
+expdecayVicont <- function(r, Tp, m, rho0){
+  # Constructs the first row of the covariance matrix for a single
+  # cluster, Vi, under the exponential decay model in continuous time,
+  # at the individual level
   #
   # Inputs:
   # Tp - number of time periods
   # m - number of individuals per cluster
   # rho0 - proportion of total variation attributed to cluster-period random effects
-  # meanlvl - boolean for whether to construct the variance matrix for the
-  #           cluster-period mean level or the individual level (default)
   
   totalvar <- 1
   sig2CP <- rho0*totalvar
   sig2E <- totalvar - sig2CP
-  sig2 <- sig2E/m
-  if(meanlvl==TRUE){
-    if(r==1){
-      Vi <- expdecayVi(r=r, Tp=Tp, m=m, rho0=rho0, meanlvl=meanlvl) # Reverts to Hussey and Hughes
-    }
-    else{
-      vars <- (1/m^2)*(m + 2*((r^(1/m))*(-m*(r^(1/m)) + m + r - 1))/((r^(1/m)) - 1)^2) # to be multiplied by sig2CP and added to sig2
-      covars <- (1/m^2)*(((r^((1/m)-1))*(r-1)^2)/((r^(1/m)) - 1)^2) # to be multiplied by sig2CP and r^{|j-j'|}
-      mat <- matrix(covars, nrow=Tp, ncol=Tp) - diag(covars,Tp) + diag(vars,Tp)
-      Vi <- diag(sig2,Tp) +
-        (sig2CP*(r^abs(matrix(1:Tp, nrow=Tp, ncol=Tp, byrow=FALSE) -
-                         matrix(1:Tp, nrow=Tp, ncol=Tp, byrow=TRUE)))*mat)  
-    }
-  }
-  else{
-    Vi <- diag(sig2E,Tp*m) +
-      sig2CP*(r^(abs(matrix(rep(1:(Tp*m)), nrow=Tp*m, ncol=Tp*m, byrow=FALSE) -
-                       matrix(rep(1:(Tp*m)), nrow=Tp*m, ncol=Tp*m, byrow=TRUE))/m))
-  }
-  return(Vi)
+  Virow1 <- as.vector(cbind((sig2E + sig2CP), sig2CP*(r^(matrix(1:(Tp*m-1), nrow=1, ncol=Tp*m-1)/m))))
+  return(Virow1)
 }
 
 # Design matrices (or treatment schedules) for different trial designs
@@ -229,7 +204,7 @@ generate_var_results_prog <- function(Tp, m, rho0, updateProgress = NULL) {
   if (is.function(updateProgress)) {
     updateProgress()
   }
-  ctvarmat <- llply(rs, expdecayVicont, Tp, m, rho0, meanlvl=FALSE)
+  ctvarrowlist <- llply(rs, expdecayVicont, Tp, m, rho0)
   if (is.function(updateProgress)) {
     updateProgress()
   }
@@ -246,7 +221,7 @@ generate_var_results_prog <- function(Tp, m, rho0, updateProgress = NULL) {
   if (is.function(updateProgress)) {
     updateProgress()
   }
-  ctres <- laply(ctvarmat, vartheta_ind_vec, Xmat=Xmats)
+  ctres <- laply(ctvarrowlist, vartheta_ind_vec, Xmat=Xmats)
   ctSW <- ctres[,1]
   ctcrxo <- scalefactor*ctres[,2]
   ctpllel <- scalefactor*ctres[,3]
@@ -271,58 +246,3 @@ generate_var_results_prog <- function(Tp, m, rho0, updateProgress = NULL) {
                         HHSW = HHSW, HHcrxo = HHcrxo, HHpllel = HHpllel)
   return(varvals)
 }
-
-compare_designs <- function(df.long, ylabel){
-  names(df.long)[dim(df.long)[2]] <- "value" # Assumes last column to be plotted
-  p <- ggplot(data=df.long, aes(x=decay, y=value, colour=Design, linetype=Design)) +
-    geom_line(size=1.5) +
-    scale_color_manual(values = c("#F8766D", "#00BA38", "#619CFF"),
-                       labels = c("CRXO", "Parallel", "SW")) +
-    scale_linetype_manual(values = c("solid", "dotdash", "dashed"),
-                          labels = c("CRXO", "Parallel", "SW")) +
-    xlab("Decay (1 - r)") +
-    ylab(ylabel) +
-#    labs(title=bquote(paste(.(Tp), " periods, ", .(m), " subjects/cluster-period"))) +
-    theme_bw() +
-    theme(plot.title=element_text(hjust=0.5, size=14),
-          axis.title=element_text(size=16), axis.text=element_text(size=16),
-          legend.key.width = unit(1.5, "cm"),
-          legend.title=element_text(size=16), legend.text=element_text(size=16),
-          legend.position="bottom")
-  return(p)
-}
-
-plotvar_ct <- function(df.results){
-  # Variance, continuous time, all designs
-  ctvarvals <- df.results %>%
-    select(decay, starts_with('ct')) %>%
-    filter(decay<=0.5)
-  ctvarvals_long <- gather(data=ctvarvals, key=Design, value=Variance,
-                           ctSW:ctpllel, convert=TRUE)
-
-  compare_designs(ctvarvals_long, "Variance")
-}
-
-plotrelvar_ctvdt <- function(df.results){
-  # Relative variance, continuous vs discrete time, all designs
-  ctvdtvarvals <- df.results %>%
-    mutate(ratioSW=ctSW/dtSW, ratiocrxo=ctcrxo/dtcrxo, ratiopllel=ctpllel/dtpllel) %>%
-    select(decay, starts_with('ratio')) %>%
-    filter(decay<=0.5)
-  ctvdtvarvals_long <- gather(data=ctvdtvarvals, key=Design, value=Relative_variance,
-                              ratioSW:ratiopllel, convert=TRUE)
-
-  compare_designs(ctvdtvarvals_long, "Relative variance") + geom_hline(aes(yintercept=1))
-}
-
-plotrelvar_ctvHH <- function(df.results){
-  # Relative variance, continuous time vs HH, all designs
-  ctvHHvarvals <- df.results %>%
-    mutate(ratioSW=ctSW/HHSW, ratiocrxo=ctcrxo/HHcrxo, ratiopllel=ctpllel/HHpllel) %>%
-    select(decay, starts_with('ratio')) %>%
-    filter(decay<=0.5)
-  ctvHHvarvals_long <- gather(data=ctvHHvarvals, key=Design, value=Relative_variance,
-                              ratioSW:ratiopllel, convert=TRUE)
-  
-  compare_designs(ctvHHvarvals_long, "Relative variance") + geom_hline(aes(yintercept=1))
-}  
