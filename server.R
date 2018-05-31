@@ -46,9 +46,8 @@ shinyServer(function(input, output) {
   header1a <- renderPrint({
     tags$h3("Variance of treatment effect estimator")
   })
-  
   header1b <- renderPrint({
-    tags$h4("Continuous-time decaying correlation")
+    tags$h4("Continuous-time correlation decay")
   })
   
   output$plot1 <- renderPlotly({
@@ -87,7 +86,7 @@ shinyServer(function(input, output) {
   })
   
   header2b <- renderPrint({
-    tags$h4("Uniform vs Continuous-time decaying correlation")
+    tags$h4("Uniform correlation vs continuous-time correlation decay")
   })
   
   output$plot2 <- renderPlotly({
@@ -130,7 +129,7 @@ shinyServer(function(input, output) {
   })
   
   header3b <- renderPrint({
-    tags$h4("Discrete-time vs Continuous-time decaying correlation")
+    tags$h4("Discrete-time vs continuous-time correlation decay")
   })
   
   output$plot3 <- renderPlotly({
