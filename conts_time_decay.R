@@ -30,7 +30,7 @@ vartheta_mean <- function(Vi, Xmat){
   return(var)
 }
 
-vartheta_ind_vec <- function(Virow1, Xmat){
+vartheta_ind_vec <- function(r, Tp, m, rho0, Xmat){
   # Calculates the variance of the treatment effect, theta, for a model at the
   # individual level with a particular treatment schedule
   #
@@ -38,6 +38,10 @@ vartheta_ind_vec <- function(Virow1, Xmat){
   # Xmat - a vector of K x T matrices of the treatment schedule (note: all elements either 0 or 1)
   # Virow1 - first row of length Tm of the covariance matrix for one cluster
   
+  totalvar <- 1
+  sig2CP <- rho0*totalvar
+  sig2E <- totalvar - sig2CP
+  Virow1 <- as.vector(cbind((sig2E + sig2CP), sig2CP*(r^(matrix(1:(Tp*m-1), nrow=1, ncol=Tp*m-1)/m))))
   Vi <- toeplitz(Virow1)
   Vi_inv <- TrenchInverse(Vi)
   vars <- laply(Xmat, vartheta, Vi_inv)
@@ -120,22 +124,6 @@ expdecayVi <- function(r, Tp, m, rho0, meanlvl=TRUE){
   return(Vi)
 }
 
-expdecayVicont <- function(r, Tp, m, rho0){
-  # Constructs the first row of the covariance matrix for a single
-  # cluster, Vi, under the exponential decay model in continuous time,
-  # at the individual level
-  #
-  # Inputs:
-  # Tp - number of time periods
-  # m - number of individuals per cluster
-  # rho0 - proportion of total variation attributed to cluster-period random effects
-  
-  totalvar <- 1
-  sig2CP <- rho0*totalvar
-  sig2E <- totalvar - sig2CP
-  Virow1 <- as.vector(cbind((sig2E + sig2CP), sig2CP*(r^(matrix(1:(Tp*m-1), nrow=1, ncol=Tp*m-1)/m))))
-  return(Virow1)
-}
 
 # Design matrices (or treatment schedules) for different trial designs
 # Stepped wedge (SW), cluster randomised crossover (CRXO), parallel, parallel w/baseline
@@ -204,14 +192,7 @@ generate_var_results_prog <- function(Tp, m, rho0, updateProgress = NULL) {
   if (is.function(updateProgress)) {
     updateProgress()
   }
-  ctvarrowlist <- llply(rs, expdecayVicont, Tp, m, rho0)
-  if (is.function(updateProgress)) {
-    updateProgress()
-  }
   dtvarmat <- llply(rs, expdecayVi, Tp, m, rho0, meanlvl=TRUE)
-  if (is.function(updateProgress)) {
-    updateProgress()
-  }
   HHvarmat <- HHVi(Tp, m, rho0, meanlvl=TRUE)
   
   # Get the variances of the treatment effect estimator under the
@@ -221,7 +202,7 @@ generate_var_results_prog <- function(Tp, m, rho0, updateProgress = NULL) {
   if (is.function(updateProgress)) {
     updateProgress()
   }
-  ctres <- laply(ctvarrowlist, vartheta_ind_vec, Xmat=Xmats)
+  ctres <- laply(rs, vartheta_ind_vec, Tp=Tp, m=m, rho0=rho0, Xmat=Xmats)
   ctSW <- ctres[,1]
   ctcrxo <- scalefactor*ctres[,2]
   ctpllel <- scalefactor*ctres[,3]
