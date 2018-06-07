@@ -70,7 +70,7 @@ vartheta <- function(Xmat, Vi_inv) {
 # Variance matrices under different models
 # Hussey & Hughes, discrete time decay, continuous time decay
 
-HHVi <- function(Tp, m, rho0, meanlvl=TRUE){
+HHVi <- function(Tp, m, rho0){
   # Constructs the variance matrix for a single cluster, Vi, under the
   # Hussey & Hughes model (2007), at either the cluster mean level or
   # at the individual level
@@ -79,23 +79,16 @@ HHVi <- function(Tp, m, rho0, meanlvl=TRUE){
   # Tp - number of time periods
   # m - number of individuals per cluster
   # rho0 - proportion of total variation attributed to cluster random effects
-  # meanlvl - boolean for whether to construct the variance matrix for the
-  #           cluster mean level (default) or the individual level
-  
+
   totalvar <- 1
   tau2 <- rho0*totalvar
   sig2E <- totalvar - tau2
   sig2 <- sig2E/m # subject-specific variance at mean level
-  if(meanlvl==TRUE){
-    Vi <- diag(sig2,Tp) + tau2*matrix(1, nrow=Tp, ncol=Tp)
-  }
-  else{
-    Vi <- diag(sig2E,Tp*m) + tau2*matrix(1, nrow=Tp*m, ncol=Tp*m)
-  }
+  Vi <- diag(sig2,Tp) + tau2*matrix(1, nrow=Tp, ncol=Tp)
   return(Vi)
 }
 
-expdecayVi <- function(r, Tp, m, rho0, meanlvl=TRUE){
+expdecayVi <- function(r, Tp, m, rho0){
   # Constructs the variance matrix for a single cluster, Vi, under the
   # exponential decay model (Kasza et al 2017), at either the cluster-
   # period mean level or at the individual level
@@ -104,23 +97,14 @@ expdecayVi <- function(r, Tp, m, rho0, meanlvl=TRUE){
   # Tp - number of time periods
   # m - number of individuals per cluster
   # rho0 - proportion of total variation attributed to cluster-period random effects
-  # meanlvl - boolean for whether to construct the variance matrix for the
-  #           cluster-period mean level (default) or the individual level
-  
+
   totalvar <- 1
   sig2CP <- rho0*totalvar
   sig2E <- totalvar - sig2CP
   sig2 <- sig2E/m
-  if(meanlvl==TRUE){
-    Vi <- diag(sig2,Tp) +
-      sig2CP*(r^abs(matrix(1:Tp, nrow=Tp, ncol=Tp, byrow=FALSE) -
+  Vi <- diag(sig2,Tp) +
+        sig2CP*(r^abs(matrix(1:Tp, nrow=Tp, ncol=Tp, byrow=FALSE) -
                       matrix(1:Tp, nrow=Tp, ncol=Tp, byrow=TRUE)))    
-  }
-  else{
-    Vi <- diag(sig2E,Tp*m) +
-      sig2CP*(r^abs(matrix(rep(1:Tp, each=m), nrow=Tp*m, ncol=Tp*m, byrow=FALSE) -
-                      matrix(rep(1:Tp, each=m), nrow=Tp*m, ncol=Tp*m, byrow=TRUE)))
-  }
   return(Vi)
 }
 
@@ -192,8 +176,8 @@ generate_var_results_prog <- function(Tp, m, rho0, updateProgress = NULL) {
   if (is.function(updateProgress)) {
     updateProgress()
   }
-  dtvarmat <- llply(rs, expdecayVi, Tp, m, rho0, meanlvl=TRUE)
-  HHvarmat <- HHVi(Tp, m, rho0, meanlvl=TRUE)
+  dtvarmat <- llply(rs, expdecayVi, Tp, m, rho0)
+  HHvarmat <- HHVi(Tp, m, rho0)
   
   # Get the variances of the treatment effect estimator under the
   # different models and designs
