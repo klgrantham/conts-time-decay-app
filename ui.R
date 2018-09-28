@@ -8,7 +8,7 @@ library(plotly)
 shinyUI(fluidPage(
   
   # App title
-  titlePanel("Continuous-time correlation decay model"),
+  titlePanel("Continuous-time correlation decay"),
   
   # Sidebar layout
   sidebarLayout(
@@ -18,13 +18,13 @@ shinyUI(fluidPage(
       
       # Input: Interval, number of time periods
       sliderInput("nperiods", "Number of periods:",
-                  min = 2, max = 8,
+                  min = 3, max = 8,
                   value = 4, step = 1,
                   ticks=FALSE),
       
       # Input: Interval, number of subjects per cluster-period
       sliderInput("nsubjects", "Number of subjects per cluster-period:",
-                  min = 5, max = 500,
+                  min = 5, max = 250,
                   value = 50, step = 5),
       
       # Input: Interval, base correlation rho0
