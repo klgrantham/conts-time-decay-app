@@ -70,7 +70,7 @@ vartheta <- function(Xmat, Vi_inv) {
 # Variance matrices under different models
 # Hussey & Hughes, discrete time decay, continuous time decay
 
-HHVi <- function(Tp, m, rho0){
+HHVi <- function(rho0, Tp, m){
   # Constructs the variance matrix for a single cluster, Vi, under the
   # Hussey & Hughes model (2007), at either the cluster mean level or
   # at the individual level
@@ -112,50 +112,51 @@ expdecayVi <- function(r, Tp, m, rho0){
 # Design matrices (or treatment schedules) for different trial designs
 # Stepped wedge (SW), cluster randomised crossover (CRXO), parallel, parallel w/baseline
 
-SWdesmat <- function(Tp){
+SWdesmat <- function(Tp, N=Tp-1){
   Xsw <- matrix(data=0, ncol=Tp, nrow=(Tp-1))
   for(i in 1:(Tp-1)){
     Xsw[i,(i+1):Tp] <- 1
   }
-  return(Xsw)
+  if(N%%(Tp-1) != 0) stop('N must be a multiple of Tp-1')
+  Xsw %x% rep(1, N/(Tp-1))
 }
 
-crxodesmat <- function(Tp){
-  if(Tp%%2==0) {
-    nclust <- Tp
-  } else {
-    nclust <- Tp-1
-  }
-  Xcrxo <- matrix(data=0, ncol=Tp, nrow=nclust)
-  Xcrxo[1:nclust/2, seq(1,Tp,2)] <- 1
-  Xcrxo[(nclust/2 + 1):nclust, seq(2,Tp,2)] <- 1
-  return(Xcrxo)
+crxodesmat <- function(Tp, N=Tp){
+  if(N%%2 != 0) stop('N must be even')
+  Xcrxo <- matrix(data=0, ncol=Tp, nrow=2)
+  Xcrxo[1, seq(1,Tp,2)] <- 1
+  Xcrxo[2, seq(2,Tp,2)] <- 1
+  Xcrxo %x% rep(1, N/2)
 }
 
-plleldesmat <- function(Tp){
-  if(Tp%%2==0) {
-    nclust <- Tp
-  } else {
-    nclust <- Tp-1
-  }
-  Xpllel <- matrix(data=0, ncol=Tp, nrow=nclust)
-  Xpllel[1:nclust/2,] <- 1
-  return(Xpllel)
+plleldesmat <- function(Tp, N=Tp){
+  if(N%%2 != 0) stop('N must be even')
+  Xpllel <- matrix(data=0, ncol=Tp, nrow=2)
+  Xpllel[1,] <- 1
+  Xpllel %x% rep(1, N/2)
 }
 
-pllelbasedesmat <- function(Tp){
-  if(Tp%%2==0) {
-    nclust <- Tp
-  } else {
-    nclust <- Tp-1
+pow <- function(vars, effsize, siglevel=0.05){
+  z <- qnorm(siglevel/2)
+  pow <- pnorm(z + sqrt(1/vars)*effsize)
+  return(pow)
+}
+
+ErhoUC <- function(r, Tp, m, rho0_CD, N){
+  if(r==1) ErhoUC <- rho0_CD
+  else{
+    sig2E <- 1 - rho0_CD
+    quadsum <- rho0_CD*(Tp*m - (2*r^(1/m)*(1 - r^Tp - m*Tp*(1 - r^(1/m))))/(r^(1/m) - 1)^2)
+    dblsum <- rho0_CD*(m - (2*r^(1/m)*(1 - r - m*(1 - r^(1/m))))/(r^(1/m) - 1)^2)
+    Esig2CP <- (1/(N*Tp*m-N-Tp+1))*(((N*m-1)/(Tp*m^2))*quadsum + (1/m^2)*dblsum - N*rho0_CD)
+    Esig2E <- sig2E + (1/(N*Tp*m-N-T+1))*(N*Tp*m*rho0_CD - ((N-1)/(Tp*m))*quadsum - (Tp/m)*dblsum)
+    ErhoUC <- Esig2CP/(Esig2CP + Esig2E)
   }
-  Xpllelbase <- matrix(data=0, ncol=Tp, nrow=nclust)
-  Xpllelbase[1:nclust/2, 2:Tp] <- 1
-  return(Xpllelbase)
+  return(ErhoUC)
 }
 
 # Generate variance results for user-defined trial configuration, with progress bar
-generate_var_results_prog <- function(Tp, m, rho0, updateProgress = NULL) {
+generate_var_results_prog <- function(Tp, N, m, rho0_CD, updateProgress = NULL) {
   # Calculates the variance of the treatment effect estimator under the models:
   #    continuous time (ct), discrete time (dt), Hussey & Hughes (HH)
   # with trial designs:
@@ -176,38 +177,37 @@ generate_var_results_prog <- function(Tp, m, rho0, updateProgress = NULL) {
   if (is.function(updateProgress)) {
     updateProgress()
   }
-  dtvarmat <- llply(rs, expdecayVi, Tp, m, rho0)
-  HHvarmat <- HHVi(Tp, m, rho0)
+  dtvarmat <- llply(rs, expdecayVi, Tp, m, rho0_CD)
+  
+  # Calculate expected value of rho0_UC
+  rho0_UC <- laply(rs, ErhoUC, Tp, m, rho0_CD, N)
+  HHvarmat <- llply(rho0_UC, HHVi, Tp, m)
   
   # Get the variances of the treatment effect estimator under the
   # different models and designs
-  scalefactor <- Tp/(Tp-1)
-  Xmats <- list(SWdesmat(Tp), crxodesmat(Tp), plleldesmat(Tp))
-  if (is.function(updateProgress)) {
-    updateProgress()
-  }
-  ctres <- laply(rs, vartheta_ind_vec, Tp=Tp, m=m, rho0=rho0, Xmat=Xmats)
-  ctSW <- ctres[,1]
-  ctcrxo <- scalefactor*ctres[,2]
-  ctpllel <- scalefactor*ctres[,3]
+  SWXmat <- SWdesmat(Tp, N)
+  crxoXmat <- crxodesmat(Tp, N)
+  pllelXmat <- plleldesmat(Tp, N)
+  Xmats <- list(SWXmat, crxoXmat, pllelXmat)
   
   if (is.function(updateProgress)) {
     updateProgress()
   }
-  dtSW <- laply(dtvarmat, vartheta_mean, Xmat=SWdesmat(Tp))
-  dtcrxo <- scalefactor*laply(dtvarmat, vartheta_mean, Xmat=crxodesmat(Tp))
-  dtpllel <- scalefactor*laply(dtvarmat, vartheta_mean, Xmat=plleldesmat(Tp))
-  
+  ctres <- laply(rs, vartheta_ind_vec, Tp=Tp, m=m, rho0=rho0_CD, Xmat=Xmats)
+
   if (is.function(updateProgress)) {
     updateProgress()
   }
-  HHSW <- vartheta_mean(Vi=HHvarmat, Xmat=SWdesmat(Tp))
-  HHcrxo <- scalefactor*vartheta_mean(Vi=HHvarmat, Xmat=crxodesmat(Tp))
-  HHpllel <- scalefactor*vartheta_mean(Vi=HHvarmat, Xmat=plleldesmat(Tp))
-  
   varvals <- data.frame(decay=1-rs,
-                        ctSW = ctSW, ctcrxo = ctcrxo, ctpllel = ctpllel,
-                        dtSW = dtSW, dtcrxo = dtcrxo, dtpllel = dtpllel,
-                        HHSW = HHSW, HHcrxo = HHcrxo, HHpllel = HHpllel)
+                        rhoUC = rho0_UC,
+                        ctSW = ctres[,1],
+                        ctcrxo = ctres[,2],
+                        ctpllel = ctres[,3],
+                        dtSW = laply(dtvarmat, vartheta_mean, Xmat=SWXmat),
+                        dtcrxo = laply(dtvarmat, vartheta_mean, Xmat=crxoXmat),
+                        dtpllel = laply(dtvarmat, vartheta_mean, Xmat=pllelXmat),
+                        HHSW = laply(HHvarmat, vartheta_mean, Xmat=SWXmat),
+                        HHcrxo = laply(HHvarmat, vartheta_mean, Xmat=crxoXmat),
+                        HHpllel = laply(HHvarmat, vartheta_mean, Xmat=pllelXmat))
   return(varvals)
 }

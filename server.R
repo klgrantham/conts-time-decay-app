@@ -31,7 +31,8 @@ shinyServer(function(input, output) {
       progress$set(value = value, detail = detail)
     }
     
-    res <- generate_var_results_prog(input$nperiods, input$nsubjects, input$rho0, updateProgress)
+    res <- generate_var_results_prog(input$nperiods, input$nclusters,
+                                     input$nsubjects, input$rho0, updateProgress)
     return(res)
   })
   
