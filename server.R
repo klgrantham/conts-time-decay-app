@@ -94,16 +94,19 @@ shinyServer(function(input, output) {
     res <- getresults()
     relres <- res %>% 
       mutate(ratioSW=HHSW/ctSW, ratiocrxo=HHcrxo/ctcrxo, ratiopllel=HHpllel/ctpllel) %>%
-      select(decay, starts_with('ratio'))
+      select(decay, rhoUC, starts_with('ratio'))
     p <- plot_ly(relres, height=400, width=650, x=~decay, y=~ratiopllel, name="Parallel", type="scatter",
                  mode="lines", hoverinfo="text", hoverlabel=list(bordercolor=NULL, font=list(size=16)),
-                 text=~paste("Decay:", round(decay, 2), "<br>Relative variance:", round(ratiopllel, 3)),
+                 text=~paste("Decay:", round(decay, 2), "<br>Relative variance:", round(ratiopllel, 3),
+                             "<br>rhoUC:", round(rhoUC, 3)),
                  line=list(color="#00BA38", width=4, dash="dash")) %>%
       add_trace(y=~ratiocrxo, name="CRXO", hoverinfo="text",
-                text=~paste("Decay:",  round(decay, 2), "<br>Relative variance:", round(ratiocrxo, 3)),
+                text=~paste("Decay:",  round(decay, 2), "<br>Relative variance:", round(ratiocrxo, 3),
+                            "<br>rhoUC:", round(rhoUC, 3)),
                 line=list(color="#F8766D", width=4, dash="dashdot")) %>%
       add_trace(y=~ratioSW, name="SW", hoverinfo="text",
-                text=~paste("Decay:", round(decay, 2), "<br>Relative variance:", round(ratioSW, 3)),
+                text=~paste("Decay:", round(decay, 2), "<br>Relative variance:", round(ratioSW, 3),
+                            "<br>rhoUC:", round(rhoUC, 3)),
                 line=list(color="#619CFF", width=4, dash="solid")) %>%
       add_trace(y=1, line=list(color="black", width=1, dash="solid"), hoverinfo="none", showlegend=FALSE) %>%
       layout(xaxis=list(title="Decay", titlefont=list(size=18), showline=TRUE,
