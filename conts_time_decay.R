@@ -211,3 +211,10 @@ generate_var_results_prog <- function(Tp, N, m, rho0_CD, updateProgress = NULL) 
                         HHpllel = laply(HHvarmat, vartheta_mean, Xmat=pllelXmat))
   return(varvals)
 }
+
+# Calculate power for a set of variances and a given effect size and sig level
+powdf <- function(df, effsize, siglevel=0.05){
+  powvals <- apply(df[-df$decay], MARGIN=2, pow, effsize, siglevel)
+  powdf <- data.frame(decay=df$decay, powvals)
+  return(powdf)
+}

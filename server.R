@@ -162,4 +162,46 @@ shinyServer(function(input, output) {
     p$elementId <- NULL
     p
   })
+  
+  output$plotheader4a <- eventReactive(input$update, {
+    header4a()
+  })
+  
+  output$plotheader4b <- eventReactive(input$update, {
+    header4b()
+  })
+  
+  header4a <- renderPrint({
+    tags$h3(paste0("Power to detect effect size of ", input$effsize))
+  })
+  
+  header4b <- renderPrint({
+    tags$h4("Continuous-time correlation decay")
+  })
+  
+  output$plot4 <- renderPlotly({
+    res <- getresults()
+    siglevel <- 0.05
+    pow <- powdf(res, input$effsize, siglevel)
+    p <- plot_ly(pow, height=400, width=650, x=~decay, y=~ctpllel, name="Parallel", type="scatter",
+                 mode="lines", hoverinfo="text", hoverlabel=list(bordercolor=NULL, font=list(size=16)),
+                 text=~paste("Decay:", round(decay, 2), "<br>Power:", round(ctpllel, 3)),
+                 line=list(color="#00BA38", width=4, dash="dash")) %>%
+      add_trace(y=~ctcrxo, name="CRXO", hoverinfo="text",
+                text=~paste("Decay:",  round(decay, 2), "<br>Power:", round(ctcrxo, 3)),
+                line=list(color="#F8766D", width=4, dash="dashdot")) %>%
+      add_trace(y=~ctSW, name="SW", hoverinfo="text",
+                text=~paste("Decay:", round(decay, 2), "<br>Power:", round(ctSW, 3)),
+                line=list(color="#619CFF", width=4, dash="solid")) %>%
+      add_trace(y=1, line=list(color="black", width=1, dash="solid"), hoverinfo="none", showlegend=FALSE) %>%
+      layout(xaxis=list(title="Decay", titlefont=list(size=18), showline=TRUE,
+                        tickmode="auto", tickfont=list(size=16), nticks=6, ticks="inside",
+                        mirror=TRUE, showgrid=FALSE),
+             yaxis=list(title="Power", titlefont=list(size=18), tickfont=list(size=16),
+                        mirror=TRUE, showline=TRUE),
+             legend=list(orientation="h", xanchor="center", x=0.5, y=-0.3, font=list(size=16)),
+             margin=list(l=100, r=40))
+    p$elementId <- NULL
+    p
+  })
 })

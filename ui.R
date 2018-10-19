@@ -37,6 +37,17 @@ shinyUI(fluidPage(
                   min = 0, max = 0.2,
                   value = 0.023, step = 0.001),
       
+      # Input: Checkbox for whether to view power
+      checkboxInput("viewpower", "View power?", FALSE),
+      
+      conditionalPanel(
+        condition = "input.viewpower == true",
+        # Input: Interval, effect size for power calculation
+        sliderInput("effsize", "Effect size:",
+                    min = 0.01, max = 1.0,
+                    value = 0.2, step = 0.01)
+      ),
+      
       # Update button to defer the rendering of output until user
       # clicks the button
       actionButton("update", "Update")
@@ -45,7 +56,7 @@ shinyUI(fluidPage(
     # Main panel for displaying output
     mainPanel(
       
-      # Output: Plotly plot of variance under CT model
+      # Output: Plot of variance under CT model
       
       uiOutput("plotheader1a"),
       
@@ -53,7 +64,7 @@ shinyUI(fluidPage(
       
       plotlyOutput("plot1"),
       
-      # Output: Plotly plot of relative variance, HH vs CT vs models
+      # Output: Plot of relative variance, HH vs CT vs models
 
       uiOutput("plotheader2a"),
       
@@ -61,13 +72,21 @@ shinyUI(fluidPage(
 
       plotlyOutput("plot2"),
       
-      # Output: Plotly plot of relative variance, DT vs CT models
+      # Output: Plot of relative variance, DT vs CT models
 
       uiOutput("plotheader3a"),
       
       uiOutput("plotheader3b"),
 
-      plotlyOutput("plot3")
+      plotlyOutput("plot3"),
+      
+      # Output: Plot of power under CT model
+      
+      uiOutput("plotheader4a"),
+      
+      uiOutput("plotheader4b"),
+      
+      plotlyOutput("plot4")
     )
   )
 ))
