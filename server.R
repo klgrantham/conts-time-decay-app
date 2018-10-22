@@ -8,7 +8,11 @@ library(plotly)
 
 source('conts_time_decay.R')
 
-shinyServer(function(input, output) {
+shinyServer(function(input, output, session) {
+
+  observe({
+    updateNumericInput(session, inputId="nclusters", value=2*(input$nperiods - 1))
+  })
   
   getresults <- eventReactive(input$update, {
     
