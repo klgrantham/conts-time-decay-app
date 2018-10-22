@@ -204,4 +204,20 @@ shinyServer(function(input, output) {
     p$elementId <- NULL
     p
   })
+  
+  output$resultstable <- renderTable({
+    getresults()
+  })
+  
+  output$resultsdownload <- downloadHandler(
+    filename = function(){
+      if(input$rho0==1){rho0char <- 100}else{rho0char <- strsplit(as.character(input$rho0),"\\.")[[1]][2]}
+      if(input$effsize==1){effsizechar <- 100}else{effsizechar <- strsplit(as.character(input$effsize),"\\.")[[1]][2]} 
+      paste0("results_", "N", input$nperiods, "T", input$nperiods, "m",
+             input$nsubjects, "rho", rho0char, "effsize", effsizechar, ".csv") # Update to include input values
+    },
+    content = function(file){
+      write.csv(getresults(), file, row.names=TRUE)
+    }
+  )
 })
