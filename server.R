@@ -205,8 +205,33 @@ shinyServer(function(input, output) {
     p
   })
   
+  getresultstable <- eventReactive(input$update, {
+    res <- getresults()
+    siglevel <- 0.05
+    pow <- powdf(res, input$effsize, siglevel)
+    results <- data.frame(decay=res$decay, rhoCCD=signif(input$rho0, 3), rhoUC=signif(res$rhoUC, 3),
+                          CCD_crxo=signif(res$ctcrxo, 3), CCD_pllel=signif(res$ctpllel, 3),
+                          CCD_SW=signif(res$ctSW, 3), UC_crxo=signif(res$HHcrxo, 3),
+                          UC_pllel=signif(res$HHpllel, 3), UC_SW=signif(res$HHSW, 3),
+                          power_CCD_crxo=signif(pow$ctcrxo, 3), power_CCD_pllel=signif(pow$ctpllel, 3),
+                          power_CCD_SW=signif(pow$ctSW, 3)
+                )
+  })
+
   output$resultstable <- renderTable({
-    getresults()
+    restable <- getresultstable()
+    restable$rhoCCD <- format(restable$rhoCCD, 3)
+    restable$rhoUC <- format(restable$rhoUC, 3)
+    restable$CCD_crxo <- format(restable$CCD_crxo, 3)
+    restable$CCD_pllel <- format(restable$CCD_pllel, 3)
+    restable$CCD_SW <- format(restable$CCD_SW, 3)
+    restable$UC_crxo <- format(restable$UC_crxo, 3)
+    restable$UC_pllel <- format(restable$UC_pllel, 3)
+    restable$UC_SW <- format(restable$UC_SW, 3)
+    restable$power_CCD_crxo <- format(restable$power_CCD_crxo, 3)
+    restable$power_CCD_pllel <- format(restable$power_CCD_pllel, 3)
+    restable$power_CCD_SW <- format(restable$power_CCD_SW, 3)
+    restable
   })
   
   output$resultsdownload <- downloadHandler(
@@ -214,10 +239,62 @@ shinyServer(function(input, output) {
       if(input$rho0==1){rho0char <- 100}else{rho0char <- strsplit(as.character(input$rho0),"\\.")[[1]][2]}
       if(input$effsize==1){effsizechar <- 100}else{effsizechar <- strsplit(as.character(input$effsize),"\\.")[[1]][2]} 
       paste0("results_", "N", input$nperiods, "T", input$nperiods, "m",
-             input$nsubjects, "rho", rho0char, "effsize", effsizechar, ".csv") # Update to include input values
+             input$nsubjects, "rho", rho0char, "effsize", effsizechar, ".csv")
     },
     content = function(file){
-      write.csv(getresults(), file, row.names=TRUE)
+      write.csv(getresultstable(), file, row.names=TRUE)
     }
   )
+
+  # Tables showing design matrices
+  
+  # Retrieve design matrices
+  getdesmats <- eventReactive(input$update, {
+    crxo <- crxodesmat(input$nperiods, input$nclusters)
+    pllel <- plleldesmat(input$nperiods, input$nclusters)
+    SW <- SWdesmat(input$nperiods, input$nclusters)
+    list(crxo, pllel, SW)
+  })
+  
+  # Retrieve design matrices
+  getdesmats <- function(){
+    crxo <- crxodesmat(input$nperiods, input$nclusters)
+    pllel <- plleldesmat(input$nperiods, input$nclusters)
+    SW <- SWdesmat(input$nperiods, input$nclusters)
+    list(crxo, pllel, SW)
+  }
+  
+
+  output$crxodesmat <- renderTable({
+    desmats <- getdesmats()
+    desmats[[1]]
+    },
+    colnames=FALSE, digits=0
+  )
+
+  output$plleldesmat <- renderTable({
+    desmats <- getdesmats()
+    desmats[[2]]
+    },
+    colnames=FALSE, digits=0
+  )
+  
+  output$SWdesmat <- renderTable({
+    desmats <- getdesmats()
+    desmats[[3]]
+    },
+    colnames=FALSE, digits=0
+  )
+
+  output$plotheader5a <- renderPrint({
+    tags$h4("Cluster randomised crossover (CRXO) design matrix")
+  })
+  
+  output$plotheader5b <- renderPrint({
+    tags$h4("Parallel design matrix")
+  })
+  
+  output$plotheader5c <- renderPrint({
+    tags$h4("Stepped wedge (SW) design matrix")
+  })
 })

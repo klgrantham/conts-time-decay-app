@@ -117,7 +117,7 @@ SWdesmat <- function(Tp, N=Tp-1){
   for(i in 1:(Tp-1)){
     Xsw[i,(i+1):Tp] <- 1
   }
-  if(N%%(Tp-1) != 0) stop('N must be a multiple of Tp-1')
+  if(N%%(Tp-1) != 0) stop('N must be a multiple of T-1')
   Xsw %x% rep(1, N/(Tp-1))
 }
 

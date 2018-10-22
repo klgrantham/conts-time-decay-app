@@ -67,7 +67,12 @@ shinyUI(fluidPage(
                   
                   tabPanel("Results table",
                            tableOutput("resultstable"),
-                           downloadButton("resultsdownload", "Download"))
+                           downloadButton("resultsdownload", "Download")),
+                  
+                  tabPanel("Design matrices",
+                           uiOutput("plotheader5a"), tableOutput("crxodesmat"),
+                           uiOutput("plotheader5b"), tableOutput("plleldesmat"),
+                           uiOutput("plotheader5c"), tableOutput("SWdesmat"))
       )
     )
   )
