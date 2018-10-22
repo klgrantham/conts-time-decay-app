@@ -67,7 +67,7 @@ shinyServer(function(input, output, session) {
       add_trace(y=~ctSW, name="SW", hoverinfo="text",
                 text=~paste("Decay:", round(decay, 2), "<br>Variance:", round(ctSW, 3)),
                 line=list(color="#619CFF", width=4, dash="solid")) %>%
-      layout(xaxis=list(title="Decay", titlefont=list(size=18), showline=TRUE,
+      layout(xaxis=list(title="Decay per period", titlefont=list(size=18), showline=TRUE,
                         tickmode="auto", tickfont=list(size=16), nticks=6, ticks="inside",
                         mirror=TRUE, showgrid=FALSE),
              yaxis=list(title="Variance", titlefont=list(size=18), tickfont=list(size=16),
@@ -102,18 +102,18 @@ shinyServer(function(input, output, session) {
     p <- plot_ly(relres, height=500, width=800, x=~decay, y=~ratiopllel, name="Parallel", type="scatter",
                  mode="lines", hoverinfo="text", hoverlabel=list(bordercolor=NULL, font=list(size=16)),
                  text=~paste("Decay:", round(decay, 2), "<br>Relative variance:", round(ratiopllel, 3),
-                             "<br>rhoUC:", round(rhoUC, 3)),
+                             HTML(paste0("<br>", "\u03C1", tags$sub("UC"), ":")), round(rhoUC, 3)),
                  line=list(color="#00BA38", width=4, dash="dash")) %>%
       add_trace(y=~ratiocrxo, name="CRXO", hoverinfo="text",
                 text=~paste("Decay:",  round(decay, 2), "<br>Relative variance:", round(ratiocrxo, 3),
-                            "<br>rhoUC:", round(rhoUC, 3)),
+                            HTML(paste0("<br>", "\u03C1", tags$sub("UC"), ":")), round(rhoUC, 3)), #HTML(paste0("<br>", "&rho;", tags$sub("UC"), ":"))
                 line=list(color="#F8766D", width=4, dash="dashdot")) %>%
       add_trace(y=~ratioSW, name="SW", hoverinfo="text",
                 text=~paste("Decay:", round(decay, 2), "<br>Relative variance:", round(ratioSW, 3),
-                            "<br>rhoUC:", round(rhoUC, 3)),
+                            HTML(paste0("<br>", "\u03C1", tags$sub("UC"), ":")), round(rhoUC, 3)),
                 line=list(color="#619CFF", width=4, dash="solid")) %>%
       add_trace(y=1, line=list(color="black", width=1, dash="solid"), hoverinfo="none", showlegend=FALSE) %>%
-      layout(xaxis=list(title="Decay", titlefont=list(size=18), showline=TRUE,
+      layout(xaxis=list(title="Decay per period", titlefont=list(size=18), showline=TRUE,
                         tickmode="auto", tickfont=list(size=16), nticks=6, ticks="inside",
                         mirror=TRUE, showgrid=FALSE),
              yaxis=list(title="Relative variance", titlefont=list(size=18), tickfont=list(size=16),
@@ -156,7 +156,7 @@ shinyServer(function(input, output, session) {
                 text=~paste("Decay:", round(decay, 2), "<br>Relative variance:", round(ratioSW, 3)),
                 line=list(color="#619CFF", width=4, dash="solid")) %>%
       add_trace(y=1, line=list(color="black", width=1, dash="solid"), hoverinfo="none", showlegend=FALSE) %>%
-      layout(xaxis=list(title="Decay", titlefont=list(size=18), showline=TRUE,
+      layout(xaxis=list(title="Decay per period", titlefont=list(size=18), showline=TRUE,
                         tickmode="auto", tickfont=list(size=16), nticks=6, ticks="inside",
                         mirror=TRUE, showgrid=FALSE),
              yaxis=list(title="Relative variance", titlefont=list(size=18), tickfont=list(size=16),
@@ -198,7 +198,7 @@ shinyServer(function(input, output, session) {
                 text=~paste("Decay:", round(decay, 2), "<br>Power:", round(ctSW, 3)),
                 line=list(color="#619CFF", width=4, dash="solid")) %>%
       add_trace(y=1, line=list(color="black", width=1, dash="solid"), hoverinfo="none", showlegend=FALSE) %>%
-      layout(xaxis=list(title="Decay", titlefont=list(size=18), showline=TRUE,
+      layout(xaxis=list(title="Decay per period", titlefont=list(size=18), showline=TRUE,
                         tickmode="auto", tickfont=list(size=16), nticks=6, ticks="inside",
                         mirror=TRUE, showgrid=FALSE),
              yaxis=list(title="Power", titlefont=list(size=18), tickfont=list(size=16),
