@@ -66,8 +66,10 @@ shinyUI(fluidPage(
                            plotlyOutput("plot4")),
                   
                   tabPanel("Results table",
-                           tableOutput("resultstable"),
-                           downloadButton("resultsdownload", "Download")),
+                           br(),
+                           downloadButton("resultsdownload", "Download results (.csv)"),
+                           hr(),
+                           tableOutput("resultstable")),
                   
                   tabPanel("Design matrices",
                            uiOutput("plotheader5a"), tableOutput("crxodesmat"),

@@ -48,12 +48,12 @@ shinyServer(function(input, output) {
     tags$h3("Variance of treatment effect estimator")
   })
   header1b <- renderPrint({
-    tags$h4("Continuous-time correlation decay")
+    tags$h4("Continuous-time correlation decay (CCD)")
   })
   
   output$plot1 <- renderPlotly({
     res <- getresults()
-    p <- plot_ly(res, height=400, width=650, x=~decay, y=~ctpllel, name="Parallel", type="scatter",
+    p <- plot_ly(res, height=500, width=800, x=~decay, y=~ctpllel, name="Parallel", type="scatter",
                  mode="lines", hoverinfo="text", hoverlabel=list(bordercolor=NULL, font=list(size=16)),
                  text=~paste("Decay:", round(decay, 2), "<br>Variance:", round(ctpllel, 3)),
                  line=list(color="#00BA38", width=4, dash="dash")) %>%
@@ -87,7 +87,7 @@ shinyServer(function(input, output) {
   })
   
   header2b <- renderPrint({
-    tags$h4("Uniform correlation vs continuous-time correlation decay")
+    tags$h4("Uniform correlation (UC) vs continuous-time correlation decay (CCD)")
   })
   
   output$plot2 <- renderPlotly({
@@ -95,7 +95,7 @@ shinyServer(function(input, output) {
     relres <- res %>% 
       mutate(ratioSW=HHSW/ctSW, ratiocrxo=HHcrxo/ctcrxo, ratiopllel=HHpllel/ctpllel) %>%
       select(decay, rhoUC, starts_with('ratio'))
-    p <- plot_ly(relres, height=400, width=650, x=~decay, y=~ratiopllel, name="Parallel", type="scatter",
+    p <- plot_ly(relres, height=500, width=800, x=~decay, y=~ratiopllel, name="Parallel", type="scatter",
                  mode="lines", hoverinfo="text", hoverlabel=list(bordercolor=NULL, font=list(size=16)),
                  text=~paste("Decay:", round(decay, 2), "<br>Relative variance:", round(ratiopllel, 3),
                              "<br>rhoUC:", round(rhoUC, 3)),
@@ -141,7 +141,7 @@ shinyServer(function(input, output) {
     relres <- res %>% 
       mutate(ratioSW=dtSW/ctSW, ratiocrxo=dtcrxo/ctcrxo, ratiopllel=dtpllel/ctpllel) %>%
       select(decay, starts_with('ratio'))
-    p <- plot_ly(relres, height=400, width=650, x=~decay, y=~ratiopllel, name="Parallel", type="scatter",
+    p <- plot_ly(relres, height=500, width=800, x=~decay, y=~ratiopllel, name="Parallel", type="scatter",
                  mode="lines", hoverinfo="text", hoverlabel=list(bordercolor=NULL, font=list(size=16)),
                  text=~paste("Decay:", round(decay, 2), "<br>Relative variance:", round(ratiopllel, 3)),
                  line=list(color="#00BA38", width=4, dash="dash")) %>%
@@ -176,14 +176,14 @@ shinyServer(function(input, output) {
   })
   
   header4b <- renderPrint({
-    tags$h4("Continuous-time correlation decay")
+    tags$h4("Continuous-time correlation decay (CCD)")
   })
   
   output$plot4 <- renderPlotly({
     res <- getresults()
     siglevel <- 0.05
     pow <- powdf(res, input$effsize, siglevel)
-    p <- plot_ly(pow, height=400, width=650, x=~decay, y=~ctpllel, name="Parallel", type="scatter",
+    p <- plot_ly(pow, height=500, width=800, x=~decay, y=~ctpllel, name="Parallel", type="scatter",
                  mode="lines", hoverinfo="text", hoverlabel=list(bordercolor=NULL, font=list(size=16)),
                  text=~paste("Decay:", round(decay, 2), "<br>Power:", round(ctpllel, 3)),
                  line=list(color="#00BA38", width=4, dash="dash")) %>%
@@ -234,7 +234,7 @@ shinyServer(function(input, output) {
     names(restable) <- c("Decay", "rhoCCD", "rhoUC", "CCD CRXO", "CCD Parallel", "CCD SW",
                          "UC CRXO", "UC Parallel", "UC SW", "Power (CCD CRXO)",
                          "Power (CCD Parallel)", "Power (CCD SW)")
-    restable
+    restable[order(restable$Decay),]
   })
   
   output$resultsdownload <- downloadHandler(
@@ -290,14 +290,14 @@ shinyServer(function(input, output) {
   )
 
   output$plotheader5a <- renderPrint({
-    tags$h4("Cluster randomised crossover (CRXO) design matrix")
+    tags$h4("Cluster randomised crossover (CRXO)")
   })
   
   output$plotheader5b <- renderPrint({
-    tags$h4("Parallel design matrix")
+    tags$h4("Parallel")
   })
   
   output$plotheader5c <- renderPrint({
-    tags$h4("Stepped wedge (SW) design matrix")
+    tags$h4("Stepped wedge (SW)")
   })
 })
