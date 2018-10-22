@@ -23,9 +23,9 @@ shinyUI(fluidPage(
                   ticks=FALSE),
       
       # Input: Interval, number of clusters
-      sliderInput("nclusters", "Number of clusters, N:",
+      numericInput("nclusters", "Number of clusters, N:",
                   min = 6, max = 500,
-                  value = 6, step = 1),
+                  value = 6, step = 2),
       
       # Input: Interval, number of subjects per cluster-period
       sliderInput("nsubjects", "Number of subjects per cluster-period, m:",
