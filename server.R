@@ -231,6 +231,9 @@ shinyServer(function(input, output) {
     restable$power_CCD_crxo <- format(restable$power_CCD_crxo, 3)
     restable$power_CCD_pllel <- format(restable$power_CCD_pllel, 3)
     restable$power_CCD_SW <- format(restable$power_CCD_SW, 3)
+    names(restable) <- c("Decay", "rhoCCD", "rhoUC", "CCD CRXO", "CCD Parallel", "CCD SW",
+                         "UC CRXO", "UC Parallel", "UC SW", "Power (CCD CRXO)",
+                         "Power (CCD Parallel)", "Power (CCD SW)")
     restable
   })
   
@@ -269,21 +272,21 @@ shinyServer(function(input, output) {
     desmats <- getdesmats()
     desmats[[1]]
     },
-    colnames=FALSE, digits=0
+    colnames=FALSE, digits=0, spacing='xs'
   )
 
   output$plleldesmat <- renderTable({
     desmats <- getdesmats()
     desmats[[2]]
     },
-    colnames=FALSE, digits=0
+    colnames=FALSE, digits=0, spacing='xs'
   )
   
   output$SWdesmat <- renderTable({
     desmats <- getdesmats()
     desmats[[3]]
     },
-    colnames=FALSE, digits=0
+    colnames=FALSE, digits=0, spacing='xs'
   )
 
   output$plotheader5a <- renderPrint({
