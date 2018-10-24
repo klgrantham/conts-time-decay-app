@@ -213,7 +213,9 @@ shinyServer(function(input, output, session) {
     res <- getresults()
     siglevel <- 0.05
     pow <- powdf(res, input$effsize, siglevel)
-    results <- data.frame(decay=res$decay, rhoCCD=signif(input$rho0, 3), rhoUC=signif(res$rhoUC, 3),
+    results <- data.frame(Tp=input$nperiods, N=input$nclusters, m=input$nsubjects,
+                          rhoCCD=signif(input$rho0, 3), effsize=input$effsize,
+                          decay=res$decay, rhoUC=signif(res$rhoUC, 3),
                           CCD_crxo=signif(res$ctcrxo, 3), CCD_pllel=signif(res$ctpllel, 3),
                           CCD_SW=signif(res$ctSW, 3), UC_crxo=signif(res$HHcrxo, 3),
                           UC_pllel=signif(res$HHpllel, 3), UC_SW=signif(res$HHSW, 3),
@@ -235,7 +237,8 @@ shinyServer(function(input, output, session) {
     restable$power_CCD_crxo <- format(restable$power_CCD_crxo, 3)
     restable$power_CCD_pllel <- format(restable$power_CCD_pllel, 3)
     restable$power_CCD_SW <- format(restable$power_CCD_SW, 3)
-    names(restable) <- c("Decay", "rhoCCD", "rhoUC", "CCD CRXO", "CCD Parallel", "CCD SW",
+    names(restable) <- c("T", "N", "m", "rhoCCD", "Effect size", "Decay",
+                         "rhoUC", "CCD CRXO", "CCD Parallel", "CCD SW",
                          "UC CRXO", "UC Parallel", "UC SW", "Power (CCD CRXO)",
                          "Power (CCD Parallel)", "Power (CCD SW)")
     restable[order(restable$Decay),]
