@@ -26,6 +26,7 @@ shinyUI(fluidPage(
       numericInput("nclusters", "Number of clusters, N:",
                   min = 6, max = 500,
                   value = 6, step = 2),
+      helpText("Note: N must be an even multiple of (T-1) for comparability across designs"),
       
       # Input: Interval, number of subjects per cluster-period
       sliderInput("nsubjects", "Number of subjects per cluster-period, m:",
