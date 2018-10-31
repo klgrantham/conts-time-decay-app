@@ -248,7 +248,7 @@ shinyServer(function(input, output, session) {
     filename = function(){
       if(input$rho0==1){rho0char <- 100}else{rho0char <- strsplit(as.character(input$rho0),"\\.")[[1]][2]}
       if(input$effsize==1){effsizechar <- 100}else{effsizechar <- strsplit(as.character(input$effsize),"\\.")[[1]][2]} 
-      paste0("results_", "N", input$nperiods, "T", input$nperiods, "m",
+      paste0("results_", "T", input$nperiods, "N", input$nclusters, "m",
              input$nsubjects, "rho", rho0char, "effsize", effsizechar, ".csv")
     },
     content = function(file){
