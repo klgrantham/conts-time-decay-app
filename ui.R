@@ -74,7 +74,11 @@ shinyUI(fluidPage(
                   tabPanel("Design matrices",
                            uiOutput("plotheader5a"), tableOutput("crxodesmat"),
                            uiOutput("plotheader5b"), tableOutput("plleldesmat"),
-                           uiOutput("plotheader5c"), tableOutput("SWdesmat"))
+                           uiOutput("plotheader5c"), tableOutput("SWdesmat")),
+                  
+                  tabPanel("Other resources",
+                           br(), uiOutput("paperheader"), uiOutput("paperref"),
+                           br(), uiOutput("codeheader"), uiOutput("codelink"))
       )
     )
   )

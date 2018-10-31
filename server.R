@@ -307,4 +307,23 @@ shinyServer(function(input, output, session) {
   output$plotheader5c <- renderPrint({
     tags$h4("Stepped wedge (SW)")
   })
+  
+  output$paperheader <- renderPrint({
+    tags$h3("Paper")
+  })
+  
+  output$paperref <- renderText({
+    "Grantham KL, Kasza J, Heritier S, Forbes A, Hemming K. Accounting
+    for a decaying correlation structure in cluster randomised trials
+    with continuous recruitment. Under review."
+  })
+  
+  output$codeheader <- renderPrint({
+    tags$h3("Code")
+  })
+  
+  output$codelink <- renderUI({
+    url <- a("github.com/klgrantham/conts-time-decay", href="https://github.com/klgrantham/conts-time-decay")
+    tagList("Project code available at:", url)
+  })
 })
