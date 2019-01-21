@@ -10,6 +10,11 @@ shinyUI(fluidPage(
   # App title
   titlePanel("Continuous-time correlation decay"),
   
+  fluidRow(
+    column(12,
+           p("A within-cluster correlation structure for cluster randomized trials with continuous recruitment")
+  )),
+  
   # Sidebar layout
   sidebarLayout(
     
