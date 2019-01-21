@@ -313,9 +313,9 @@ shinyServer(function(input, output, session) {
   })
   
   output$paperref <- renderText({
-    "Grantham KL, Kasza J, Heritier S, Forbes A, Hemming K. Accounting
-    for a decaying correlation structure in cluster randomised trials
-    with continuous recruitment. Under review."
+    "Grantham KL, Kasza J, Heritier S, Hemming K, Forbes AB. Accounting
+    for a decaying correlation structure in cluster randomized trials
+    with continuous recruitment."
   })
   
   output$codeheader <- renderPrint({
